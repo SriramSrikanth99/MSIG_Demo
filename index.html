@@ -1,0 +1,106 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice-Controlled Demo</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 20px; }
+    video { width: 80%; margin-bottom: 20px; }
+    button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+  </style>
+</head>
+<body>
+
+  <h2>Voice-Controlled Demo - GenAI in Motor Claims</h2>
+  <video id="demoVideo">
+    <source src="Motor FNOL - All parts.mp4" type="video/mp4">
+    Your browser does not support the tag.
+  </video>
+  <br>
+  <button onclick="startListening()">🎤 Activate Voice Command</button>
+  <button onclick="pauseVideo()">⏸️ Pause</button>
+  <button onclick="playVideo()">▶️ Play</button>
+  <p id="status">Press the button and speak a command.</p>
+
+  <script>
+    const video = document.getElementById("demoVideo");
+    const status = document.getElementById("status");
+
+    const commandMap = {
+      "start demo" : 0,
+      "documents uploaded": 26, 
+      "analyze the call": 65,
+      "analyse the call": 65,
+      "telematics data": 120, 
+      "verify the images": 165, 
+      "reconstruct the accident": 192, 
+      "assess the damage": 213,
+      "liability assessment": 272, 
+      "severity score": 292,
+      "pause demo": "pause",
+      "continue demo": "play"
+    };
+
+    function pauseVideo() {
+      video.pause();
+      status.textContent = "demo paused.";
+    }
+
+    function playVideo() {
+      video.play();
+      status.textContent = "demo resuming.";
+    }
+
+    function startListening() {
+      video.pause(); // Pause video to avoid interference
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      status.textContent = "Listening...";
+
+      recognition.start();
+
+      recognition.onresult = (event) => {
+        let command = event.results[0][0].transcript.toLowerCase().trim();
+        command = command.replace(/[.,!?]/g, "");
+
+        status.textContent = `Heard: "${command}"`;
+
+        if (commandMap[command] === "pause") {
+          pauseVideo();
+        } else if (commandMap[command] === "play") {
+          playVideo();
+        } else if (commandMap[command]) {
+          video.currentTime = commandMap[command];
+          video.play();
+          status.textContent += ` → Jumping to ${commandMap[command]}s`;
+        } else {
+          for (let key in commandMap) {
+            if (command.includes(key)) {
+              if (commandMap[key] === "pause") {
+                pauseVideo();
+              } else if (commandMap[key] === "play") {
+                playVideo();
+              } else {
+                video.currentTime = commandMap[key];
+                video.play();
+                status.textContent += ` → Matched "${key}" → Executing`;
+              }
+              return;
+            }
+          }
+          status.textContent += " → Command not recognized.";
+        }
+      };
+
+      recognition.onerror = (event) => {
+        status.textContent = `Error: ${event.error}`;
+      };
+    }
+  </script>
+
+</body>
+</html>
